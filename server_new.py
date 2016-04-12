@@ -61,7 +61,18 @@ def client_init(connectionsocket, addr):
 			if message_list[0][1] == "I":
 				print message_list[0]
 			else:
-				print message_list[0]
+				#print message_list[0]
+				split_data=message_list[0].split('\n')
+				rfc_number=split_data[0][split_data[0].find("C ")+2:split_data[0].find(" P")]
+				client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
+				client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
+				rfc_title=split_data[3][split_data[3].find("Title: ")+7:]
+				p2p_version=split_data[0][split_data[0].find(" P")+1:]
+				print rfc_number
+				print client_host_name
+				print client_port_number
+				print rfc_title
+				print p2p_version
 
 		elif message_list[0][0] == "G":
 				print message_list[0]	

@@ -21,7 +21,7 @@ clientSocket.connect((serverName,serverPort))
 
 def create_add_request(client_rfc_num,client_rfc_title):
 
-	message = "ADD "+str(client_rfc_num)+" P2P-CI/1.0\n"\
+	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\n"\
 			  "Host: "+str(client_hostname)+"\n"\
 			  "Port: "+str(upload_client_port_number)+"\n"\
 			  "Title: "+str(client_rfc_title)+"\n"\
@@ -32,7 +32,7 @@ def create_add_request(client_rfc_num,client_rfc_title):
 
 def create_lookup_request(client_rfc_num, client_rfc_title):
 
-	message = "LOOKUP "+str(client_rfc_num)+" P2P-CI/1.0\n"\
+	message = "LOOKUP RFC "+str(client_rfc_num)+" P2P-CI/1.0\n"\
 			  "Host: "+str(client_hostname)+"\n"\
 			  "Port: "+str(upload_client_port_number)+"\n"\
 			  "Title: "+str(client_rfc_title)+"\n"\
@@ -142,7 +142,7 @@ def send_peer_info():
 	return [upload_client_port_number,rfc_numbers,rfc_titles]
 
 upload_client_port_number = 60000 + random.randint(1,1000)
-client_hostname = socket.gethostname()+str(upload_client_port_number)
+client_hostname = socket.gethostname()#+str(upload_client_port_number)
 
 
 send_data=send_peer_info()
