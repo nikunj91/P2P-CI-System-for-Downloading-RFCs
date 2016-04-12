@@ -134,7 +134,7 @@ def user_input():
 def get_rfc_details():
 	rfc_numbers=[]
 	rfc_titles=[]
-	rfc_storage_path = os.getcwd()+"/RFC"
+	rfc_storage_path = os.getcwd()+"/RFC2"
 	for file_name in os.listdir(rfc_storage_path):
 		if 'RFC' in file_name:
 			rfc_number=file_name[file_name.find("C")+1:file_name.find(".")]
