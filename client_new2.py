@@ -25,6 +25,7 @@ clientSocket.connect((serverName,serverPort))
 # Making RFC list
 #rfcs = [f for f in os.listdir(os.getcwd()+'/RFC/')]
 
+
 def create_add_request(client_rfc_num,client_rfc_title):
 
 	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\n"\
@@ -75,37 +76,49 @@ def user_input():
 		print "Enter Title"
 		client_rfc_title = raw_input()
 		req_message = create_add_request(client_rfc_num,client_rfc_title)
-		information_list = [req_message,upload_client_port_number,client_hostname,client_rfc_num,client_rfc_title]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list,-1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
 		print response_received
 		user_input()
 
-	# elif service == "GET":
-	# 	print "Enter RFC Number"
-	# 	client_rfc_num = raw_input()
-	# 	print "Enter Title"
-	# 	client_rfc_title = raw_input()
-	# 	#req_message = create_get_request(client_rfc_num, client_rfc_title)
-	# 	information_list = ["GET",client_rfc_num, client_hostname, client_port_num, client_rfc_title]
-	# 	info_add = pickle.dumps(information_list, -1)
-	# 	clientSocket.send(info_add)
-	# 	print "Get Request Sent"
-	# 	response_received = clientSocket.recv(1024)
-	# 	print "Get Response Received from Server"
-	# 	response_list = pickle.loads(response_received)
-	# 	if len(response_list) == 1:
-	# 		print response_list
-	# 	else:
-	# 		print "Generating P2P Request Message"
-	# 		p2p_get_request(client_rfc_num,client_rfc_title,response_list[1],response_list[2])
-
-	# 	user_input()
+	elif service == "GET":
+		print "Enter RFC number to download"
+		download_rfc_num = raw_input()
+		print "Enter RFC title to download"
+		download_rfc_title = raw_input()
+		
+		req_message = create_lookup_request(download_rfc_num, download_rfc_title)
+		information_list = [req_message]
+		info_add = pickle.dumps(information_list, -1)
+		clientSocket.send(info_add)
+		response_received = clientSocket.recv(1024)
+		split_response=response_received.split('\n')
+		if '200 OK' not in split_response[0]:
+			print 'P2P-CI/1.0 404 Not Found'
+		else:
+			split_lookup_response=split_response[1].split(' ')
+			download_host_name=split_lookup_response[3]
+			download_host_number=split_lookup_response[4]
+			message="GET RFC "+download_rfc_num+" P2P-CI/1.0\n"\
+					"Host: "+download_host_name+"\n"\
+					"OS: "+platform.platform()+"\n"
+			download_RFC_Socket_P2P = socket.socket()
+			print download_host_number
+			print download_host_name
+			download_RFC_Socket_P2P.connect((socket.gethostname(),int(download_host_number)))
+			pickle_message = pickle.dumps([message], -1)
+			download_RFC_Socket_P2P.send(pickle_message)
+			pickled_response=download_RFC_Socket_P2P.recv(1024)
+			response=pickle.loads(pickled_response)
+			print response[0]
+			download_RFC_Socket_P2P.close()
+		user_input()
 
 	elif service == "LIST":
 		req_message = create_list_request()
-		information_list = [req_message, upload_client_port_number, client_hostname]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list,-1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
@@ -118,7 +131,7 @@ def user_input():
 		print "Enter Title"
 		client_rfc_title = raw_input()
 		req_message = create_lookup_request(client_rfc_num, client_rfc_title)
-		information_list = [req_message, upload_client_port_number, client_hostname, client_rfc_num, client_rfc_title]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list, -1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
@@ -156,5 +169,16 @@ data = pickle.dumps(send_data)
 clientSocket.send(data)
 clientSocket.close
 
-user_input()
+def client_upload():
+	clientUploadSocket = socket.socket()
+	uploadSocket.bind((client_hostname,upload_client_port_number))
+	uploadSocket.listen(5)
+	while 1:
+		download_connection_socket, download_addr = clientUploadSocket.accept()
+		request_received = download_connection_socket.recv(1024)
+		download_request = pickle.loads(request_received)
+		print download_request[0]
+		download_connection_socket.close()
 
+user_input()
+start_new_thread(client_upload,())
