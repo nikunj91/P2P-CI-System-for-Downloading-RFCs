@@ -58,7 +58,7 @@ def lookup_peer(rfc_number,rfc_title,client_host_name,client_port_number):
 		message = "P2P-CI/1.0 200 OK"
 		rfc_host_list=peer_rfc_dict.get(rfc_number)
 		for host in rfc_host_list:
-			temp = "RFC "+str(rfc_number)+" "+str(rfc_title)+" "+str(host[0:host.find(":")])+" "+str(peer_info_dict.get(host))
+			temp = "RFC "+str(rfc_number)+" "+str(rfc_title)+" "+str(host[:host.find(":")])+" "+str(peer_info_dict.get(host))
 			message = message + "\n" + temp
 	else:
 		message = "P2P-CI/1.0 404 Not Found"
@@ -74,7 +74,7 @@ def list_peer(client_host_name):
 		for rfc in rfc_list:
 			rfc_host_list=peer_rfc_dict.get(rfc)
 			for host in rfc_host_list:
-				temp = "RFC "+str(rfc)+" "+str(rfc_number_title_dict.get(rfc))+" "+str(host[host.find(":")+1:])+" "+str(peer_info_dict.get(host))
+				temp = "RFC "+str(rfc)+" "+str(rfc_number_title_dict.get(rfc))+" "+str(host[:host.find(":")])+" "+str(peer_info_dict.get(host))
 				message = message + "\n" + temp
 	return message
 
