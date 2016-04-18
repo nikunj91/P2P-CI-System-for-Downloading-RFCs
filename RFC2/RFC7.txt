@@ -1,9 +1,3 @@
-
-
-
-
-
-
 Network Working Group                                        Bill Duvall
 Request for Comments: 2                                              SRI
 

@@ -75,12 +75,47 @@ def upload_thread():
 		downloadSocket,downloadAddress = uploadSocket.accept()
 		message = downloadSocket.recv(1024)
 		print message
+		split_data=message.split('\n')
+		request=split_data[0].split(" ")
+		if request[0]=='GET':
+			rfc_number=request[1]
+			print rfc_number
+			rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
+			print rfc_file_path
+			opened_file = open(rfc_file_path,'r')
+			data = opened_file.read()
+			reply_message = "P2P-CI/1.0 200 OK\n"\
+					  "Date: "+str(time.localtime())+"\n"\
+					  "OS: "+str(platform.platform())+"\n"\
+					  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\n"\
+					  "Content-Length: "+str(len(data))+"\n"\
+					  "Content-Type: text/plain \n"
+			reply_message=reply_message+data
+			print reply_message
+			downloadSocket.sendall(reply_message)
 
-def download_rfc_thread(req_message,peer_host_name,peer_port_number):
+
+def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	requestPeerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	requestPeerSocket.connect(('localhost',int(peer_port_number)))
+	requestPeerSocket.connect((peer_host_name,int(peer_port_number)))
 	print 'Connection with peer established'
 	requestPeerSocket.sendall(req_message)
+	print 'message sent'
+	get_reply=""
+	get_reply=requestPeerSocket.recv(1024)
+	content_line=(get_reply.split("\n"))[4]
+	content_length=int(content_line[content_line.find('Content-Length: ')+16:])
+	print content_length
+	get_reply=get_reply+requestPeerSocket.recv(content_length)
+	print get_reply
+	#print 'yaaaay'
+	rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
+	print rfc_file_path
+	data=get_reply[get_reply.find('text/plain \n')+12:]
+	with open(rfc_file_path,'w') as file:
+		file.write(data)
+	requestPeerSocket.close()
+	#file.write("xxxxxxxx")
 
 def user_input():
 	print "Enter if you want to: ADD, GET, LIST, LOOKUP or EXIT:"
@@ -123,24 +158,7 @@ def user_input():
 			print peer_port_number
 			req_message = create_get_request(client_rfc_num)
 			print req_message
-			start_new_thread(download_rfc_thread,(req_message,peer_host_name,peer_port_number))
-
-			
-			
-		#clientSocket.sendall(req_message)
-
-		# information_list = ["GET",client_rfc_num, client_hostname, client_port_num, client_rfc_title]
-		# info_add = pickle.dumps(information_list, -1)
-		# clientSocket.send(info_add)
-		# print "Get Request Sent"
-		# response_received = clientSocket.recv(1024)
-		# print "Get Response Received from Server"
-		# response_list = pickle.loads(response_received)
-		# if len(response_list) == 1:
-		# 	print response_list
-		# else:
-		# 	print "Generating P2P Request Message"
-		# 	p2p_get_request(client_rfc_num,client_rfc_title,response_list[1],response_list[2])
+			start_new_thread(download_rfc_thread,(req_message,peer_host_name,peer_port_number,client_rfc_num))
 
 		user_input()
 
