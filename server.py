@@ -204,7 +204,7 @@ def client_init(connectionsocket, addr):
 while 1:
 	#Receive incoming connection request from client
 	connectionsocket, addr = serverSocket.accept()
-	print('Got incoming connection request from ', addr)
+	print 'Got incoming connection request from ', addr
 	#Thread will handle all the incoming requests from clients and respond back to them
 	start_new_thread(client_init, (connectionsocket, addr))
 

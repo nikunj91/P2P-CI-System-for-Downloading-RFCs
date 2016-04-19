@@ -27,7 +27,7 @@ client_RFC_list = {}
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientSocket.connect((serverName,serverPort))
 print 'Connected to server at address: '+str(serverName)+" and port: "+str(serverPort)
-
+client_hostname=clientSocket.getsockname()[0]
 #Create the ADD Request message
 def create_add_request(client_rfc_num,client_rfc_title):
 	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
