@@ -281,6 +281,9 @@ def user_input():
 		exit_message=pickle.dumps([message],-1)
 		clientSocket.send(exit_message)
 		clientSocket.close()
+	else:
+		print 'Wrong input. Please try again.'
+		user_input()
 
 #Generating the initial peer file data from the specified directory
 #Returns 2 lists, one each for RFC numbers and RFC titles
