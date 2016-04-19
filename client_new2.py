@@ -10,6 +10,7 @@ import random
 from thread import *
 import platform
 import time
+import email.utils
 
 # Server Information
 serverPort = 7734
@@ -27,10 +28,10 @@ clientSocket.connect((serverName,serverPort))
 
 def create_add_request(client_rfc_num,client_rfc_title):
 
-	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\n"\
-			  "Host: "+str(client_hostname)+"\n"\
-			  "Port: "+str(upload_client_port_number)+"\n"\
-			  "Title: "+str(client_rfc_title)+"\n"\
+	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
+			  "Host: "+str(client_hostname)+"\r\n"\
+			  "Port: "+str(upload_client_port_number)+"\r\n"\
+			  "Title: "+str(client_rfc_title)+"\r\n"\
 
 	print message
 
@@ -38,28 +39,28 @@ def create_add_request(client_rfc_num,client_rfc_title):
 
 def create_lookup_request(client_rfc_num, client_rfc_title):
 
-	message = "LOOKUP RFC "+str(client_rfc_num)+" P2P-CI/1.0\n"\
-			  "Host: "+str(client_hostname)+"\n"\
-			  "Port: "+str(upload_client_port_number)+"\n"\
-			  "Title: "+str(client_rfc_title)+"\n"\
+	message = "LOOKUP RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
+			  "Host: "+str(client_hostname)+"\r\n"\
+			  "Port: "+str(upload_client_port_number)+"\r\n"\
+			  "Title: "+str(client_rfc_title)+"\r\n"\
 
 	print message
 	return message
 
 def create_get_request(client_rfc_num):
 
-	message = "GET "+str(client_rfc_num)+" P2P-CI/1.0\n"\
-			  "Host: "+str(client_hostname)+"\n"\
-			  "OS: "+platform.platform()+"\n"\
+	message = "GET RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
+			  "Host: "+str(client_hostname)+"\r\n"\
+			  "OS: "+platform.platform()+"\r\n"\
 
 	print message
 	return message
 
 def create_list_request():
 
-	message = "LIST ALL P2P-CI/1.0\n"\
-			  "Host: "+str(client_hostname)+"\n"\
-			  "Port: "+str(upload_client_port_number)+"\n"\
+	message = "LIST ALL P2P-CI/1.0\r\n"\
+			  "Host: "+str(client_hostname)+"\r\n"\
+			  "Port: "+str(upload_client_port_number)+"\r\n"\
 
 	print message
 
@@ -75,21 +76,21 @@ def upload_thread():
 		downloadSocket,downloadAddress = uploadSocket.accept()
 		message = downloadSocket.recv(1024)
 		print message
-		split_data=message.split('\n')
+		split_data=message.split('\r\n')
 		request=split_data[0].split(" ")
 		if request[0]=='GET':
-			rfc_number=request[1]
+			rfc_number=request[2]
 			print rfc_number
 			rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
 			print rfc_file_path
 			opened_file = open(rfc_file_path,'r')
 			data = opened_file.read()
-			reply_message = "P2P-CI/1.0 200 OK\n"\
-					  "Date: "+str(time.localtime())+"\n"\
-					  "OS: "+str(platform.platform())+"\n"\
-					  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\n"\
-					  "Content-Length: "+str(len(data))+"\n"\
-					  "Content-Type: text/plain \n"
+			reply_message = "P2P-CI/1.0 200 OK\r\n"\
+					  "Date: "+str(email.utils.formatdate(usegmt=True))+"\r\n"\
+					  "OS: "+str(platform.platform())+"\r\n"\
+					  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\r\n"\
+					  "Content-Length: "+str(len(data))+"\r\n"\
+					  "Content-Type: text/plain\r\n"
 			reply_message=reply_message+data
 			print reply_message
 			downloadSocket.sendall(reply_message)
@@ -103,7 +104,7 @@ def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	print 'message sent'
 	get_reply=""
 	get_reply=requestPeerSocket.recv(1024)
-	content_line=(get_reply.split("\n"))[4]
+	content_line=(get_reply.split("\r\n"))[4]
 	content_length=int(content_line[content_line.find('Content-Length: ')+16:])
 	print content_length
 	get_reply=get_reply+requestPeerSocket.recv(content_length)
@@ -111,7 +112,7 @@ def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	#print 'yaaaay'
 	rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
 	print rfc_file_path
-	data=get_reply[get_reply.find('text/plain \n')+12:]
+	data=get_reply[get_reply.find('text/plain \r\n')+14:]
 	with open(rfc_file_path,'w') as file:
 		file.write(data)
 	requestPeerSocket.close()
@@ -146,7 +147,7 @@ def user_input():
 		info_add = pickle.dumps(information_list, -1)
 		clientSocket.sendall(info_add)
 		response_received = clientSocket.recv(1024)
-		split_data=response_received.split('\n')
+		split_data=response_received.split('\r\n')
 		if '404 Not Found' in split_data[0]:
 			print response_received
 		else:
