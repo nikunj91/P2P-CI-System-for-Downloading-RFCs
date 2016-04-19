@@ -99,48 +99,61 @@ def client_init(connectionsocket, addr):
 		#if type(message_list) == str:
 		elif message_list[0][0] == 'A':
 			split_data=message_list[0].split('\r\n')
-			if 'P2P-CI/1.0' in split_data[0]:
-				rfc_number=split_data[0][split_data[0].find("C ")+2:split_data[0].find(" P")]
-				client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
-				client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
-				rfc_title=split_data[3][split_data[3].find("Title: ")+7:]
-				p2p_version=split_data[0][split_data[0].find(" P")+1:]
-				add_peer_rfc(rfc_number,rfc_title,client_host_name+":"+client_port_number)
-				message = "P2P-CI/1.0 200 OK\r\n"+split_data[1]+"\r\n"+split_data[2]+"\r\n"+split_data[3]+"\r\n"
-				connectionsocket.send(message)
+			if len(split_data)==5 and "ADD RFC " in split_data[0] and "Host: " in split_data[1] and "Port: " in split_data[2] and "Title: " in split_data[3]:
+				if 'P2P-CI/1.0' in split_data[0]:
+					rfc_number=split_data[0][split_data[0].find("C ")+2:split_data[0].find(" P")]
+					client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
+					client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
+					rfc_title=split_data[3][split_data[3].find("Title: ")+7:]
+					p2p_version=split_data[0][split_data[0].find(" P")+1:]
+					add_peer_rfc(rfc_number,rfc_title,client_host_name+":"+client_port_number)
+					message = "P2P-CI/1.0 200 OK\r\n"+split_data[1]+"\r\n"+split_data[2]+"\r\n"+split_data[3]+"\r\n"
+					connectionsocket.send(message)
+				else:
+					message="505 P2P-CI Version Not Supported\r\n"
+					connectionsocket.send(message)
 			else:
-				message="505 P2P-CI Version Not Supported\r\n"
+				message="400 Bad Request\r\n"
 				connectionsocket.send(message)
 
 		elif message_list[0][0] == "L":
 			if message_list[0][1] == "I":
 				split_data=message_list[0].split('\r\n')
-				p2p_version=split_data[0][split_data[0].find(" P")+1:]
-				if p2p_version=='P2P-CI/1.0':
-					client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
-					client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
-					message=list_peer(client_host_name+":"+client_port_number)
-					connectionsocket.send(message)
+				print len(split_data)
+				if len(split_data)==4 and "LIST ALL " in split_data[0] and "Host: " in split_data[1] and "Port: " in split_data[2]:
+					p2p_version=split_data[0][split_data[0].find(" P")+1:]
+					if p2p_version=='P2P-CI/1.0':
+						client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
+						client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
+						message=list_peer(client_host_name+":"+client_port_number)
+						connectionsocket.send(message)
+					else:
+						message="505 P2P-CI Version Not Supported\r\n"
+						connectionsocket.send(message)
 				else:
-					message="505 P2P-CI Version Not Supported\r\n"
+					message="400 Bad Request\r\n"
 					connectionsocket.send(message)
 			else:
 				split_data=message_list[0].split('\r\n')
-				rfc_number=split_data[0][split_data[0].find("C ")+2:split_data[0].find(" P")]
-				client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
-				client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
-				rfc_title=split_data[3][split_data[3].find("Title: ")+7:]
-				p2p_version=split_data[0][split_data[0].find(" P")+1:]
-				print rfc_number
-				print client_host_name
-				print client_port_number
-				print rfc_title
-				print p2p_version
-				if p2p_version=='P2P-CI/1.0':
-					message=lookup_peer(rfc_number,rfc_title,client_host_name+":"+client_port_number,client_port_number)
-					connectionsocket.send(message)
+				if len(split_data)==5 and "LOOKUP RFC " in split_data[0] and "Host: " in split_data[1] and "Port: " in split_data[2] and "Title: " in split_data[3]:
+					rfc_number=split_data[0][split_data[0].find("C ")+2:split_data[0].find(" P")]
+					client_host_name=split_data[1][split_data[1].find("Host: ")+6:]
+					client_port_number=split_data[2][split_data[2].find("Port: ")+6:]
+					rfc_title=split_data[3][split_data[3].find("Title: ")+7:]
+					p2p_version=split_data[0][split_data[0].find(" P")+1:]
+					print rfc_number
+					print client_host_name
+					print client_port_number
+					print rfc_title
+					print p2p_version
+					if p2p_version=='P2P-CI/1.0':
+						message=lookup_peer(rfc_number,rfc_title,client_host_name+":"+client_port_number,client_port_number)
+						connectionsocket.send(message)
+					else:
+						message="505 P2P-CI Version Not Supported\r\n"
+						connectionsocket.send(message)
 				else:
-					message="505 P2P-CI Version Not Supported\r\n"
+					message="400 Bad Request\r\n"
 					connectionsocket.send(message)
 		
 	if peer_info_dict.has_key(host_name):

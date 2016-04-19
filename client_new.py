@@ -77,28 +77,31 @@ def upload_thread():
 		message = downloadSocket.recv(1024)
 		print message
 		split_data=message.split('\r\n')
-		if 'P2P-CI/1.0' in split_data[0]:
-			request=split_data[0].split(" ")
-			if request[0]=='GET':
-				rfc_number=request[2]
-				print rfc_number
-				rfc_file_path = os.getcwd()+"/RFC/RFC"+rfc_number+".txt"
-				print rfc_file_path
-				opened_file = open(rfc_file_path,'r')
-				data = opened_file.read()
-				reply_message = "P2P-CI/1.0 200 OK\r\n"\
-						  "Date: "+str(email.utils.formatdate(usegmt=True))+"\r\n"\
-						  "OS: "+str(platform.platform())+"\r\n"\
-						  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\r\n"\
-						  "Content-Length: "+str(len(data))+"\r\n"\
-						  "Content-Type: text/plain\r\n"
-				reply_message=reply_message+data
-				print reply_message
-				downloadSocket.sendall(reply_message)
+		if len(split_data)==4 and "GET RFC " in split_data[0] and "Host: " in split_data[1] and "OS: " in split_data[2]:
+			if 'P2P-CI/1.0' in split_data[0]:
+				request=split_data[0].split(" ")
+				if request[0]=='GET':
+					rfc_number=request[2]
+					print rfc_number
+					rfc_file_path = os.getcwd()+"/RFC/RFC"+rfc_number+".txt"
+					print rfc_file_path
+					opened_file = open(rfc_file_path,'r')
+					data = opened_file.read()
+					reply_message = "P2P-CI/1.0 200 OK\r\n"\
+							  "Date: "+str(email.utils.formatdate(usegmt=True))+"\r\n"\
+							  "OS: "+str(platform.platform())+"\r\n"\
+							  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\r\n"\
+							  "Content-Length: "+str(len(data))+"\r\n"\
+							  "Content-Type: text/plain\r\n"
+					reply_message=reply_message+data
+					print reply_message
+					downloadSocket.sendall(reply_message)
+			else:
+				reply_message="505 P2P-CI Version Not Supported\r\n"
+				downloadSocket.send(reply_message)
 		else:
-			reply_message="505 P2P-CI Version Not Supported\r\n"
-			connectionsocket.send(reply_message)
-
+			reply_message="400 Bad Request\r\n"
+			downloadSocket.send(reply_message)
 
 def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	requestPeerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -115,11 +118,15 @@ def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 		content_length=int(content_line[content_line.find('Content-Length: ')+16:])
 		print content_length
 		get_reply=get_reply+requestPeerSocket.recv(content_length)
-		print get_reply
+		#print get_reply
 		#print 'yaaaay'
 		rfc_file_path = os.getcwd()+"/RFC/RFC"+rfc_number+".txt"
 		print rfc_file_path
-		data=get_reply[get_reply.find('text/plain \r\n')+14:]
+		#print '----------------------------------------------'
+		#print get_reply
+		data=get_reply[get_reply.find('text/plain\r\n')+12:]
+		#print '----------------------------------------------'
+		#print data
 		with open(rfc_file_path,'w') as file:
 			file.write(data)
 	else:

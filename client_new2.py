@@ -77,24 +77,31 @@ def upload_thread():
 		message = downloadSocket.recv(1024)
 		print message
 		split_data=message.split('\r\n')
-		request=split_data[0].split(" ")
-		if request[0]=='GET':
-			rfc_number=request[2]
-			print rfc_number
-			rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
-			print rfc_file_path
-			opened_file = open(rfc_file_path,'r')
-			data = opened_file.read()
-			reply_message = "P2P-CI/1.0 200 OK\r\n"\
-					  "Date: "+str(email.utils.formatdate(usegmt=True))+"\r\n"\
-					  "OS: "+str(platform.platform())+"\r\n"\
-					  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\r\n"\
-					  "Content-Length: "+str(len(data))+"\r\n"\
-					  "Content-Type: text/plain\r\n"
-			reply_message=reply_message+data
-			print reply_message
-			downloadSocket.sendall(reply_message)
-
+		if len(split_data)==4 and "GET RFC " in split_data[0] and "Host: " in split_data[1] and "OS: " in split_data[2]:
+			if 'P2P-CI/1.0' in split_data[0]:
+				request=split_data[0].split(" ")
+				if request[0]=='GET':
+					rfc_number=request[2]
+					print rfc_number
+					rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
+					print rfc_file_path
+					opened_file = open(rfc_file_path,'r')
+					data = opened_file.read()
+					reply_message = "P2P-CI/1.0 200 OK\r\n"\
+							  "Date: "+str(email.utils.formatdate(usegmt=True))+"\r\n"\
+							  "OS: "+str(platform.platform())+"\r\n"\
+							  "Last-Modified: "+str(time.ctime(os.path.getmtime(rfc_file_path)))+"\r\n"\
+							  "Content-Length: "+str(len(data))+"\r\n"\
+							  "Content-Type: text/plain\r\n"
+					reply_message=reply_message+data
+					print reply_message
+					downloadSocket.sendall(reply_message)
+			else:
+				reply_message="505 P2P-CI Version Not Supported\r\n"
+				downloadSocket.send(reply_message)
+		else:
+			reply_message="400 Bad Request\r\n"
+			downloadSocket.send(reply_message)
 
 def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	requestPeerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -104,17 +111,26 @@ def download_rfc_thread(req_message,peer_host_name,peer_port_number,rfc_number):
 	print 'message sent'
 	get_reply=""
 	get_reply=requestPeerSocket.recv(1024)
-	content_line=(get_reply.split("\r\n"))[4]
-	content_length=int(content_line[content_line.find('Content-Length: ')+16:])
-	print content_length
-	get_reply=get_reply+requestPeerSocket.recv(content_length)
-	print get_reply
-	#print 'yaaaay'
-	rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
-	print rfc_file_path
-	data=get_reply[get_reply.find('text/plain \r\n')+14:]
-	with open(rfc_file_path,'w') as file:
-		file.write(data)
+	if 'P2P-CI/1.0 200 OK' in get_reply.split("\r\n")[0]:
+		print 'P2P-CI/1.0 200 OK'
+		print 'File Received'
+		content_line=(get_reply.split("\r\n"))[4]
+		content_length=int(content_line[content_line.find('Content-Length: ')+16:])
+		print content_length
+		get_reply=get_reply+requestPeerSocket.recv(content_length)
+		#print get_reply
+		#print 'yaaaay'
+		rfc_file_path = os.getcwd()+"/RFC2/RFC"+rfc_number+".txt"
+		print rfc_file_path
+		#print '----------------------------------------------'
+		#print get_reply
+		data=get_reply[get_reply.find('text/plain\r\n')+12:]
+		#print '----------------------------------------------'
+		#print data
+		with open(rfc_file_path,'w') as file:
+			file.write(data)
+	else:
+		print "505 P2P-CI Version Not Supported\r\n"
 	requestPeerSocket.close()
 	#file.write("xxxxxxxx")
 
@@ -128,7 +144,7 @@ def user_input():
 		print "Enter Title"
 		client_rfc_title = raw_input()
 		req_message = create_add_request(client_rfc_num,client_rfc_title)
-		information_list = [req_message,upload_client_port_number,client_hostname,client_rfc_num,client_rfc_title]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list,-1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
@@ -143,12 +159,14 @@ def user_input():
 		print client_rfc_num
 		print client_rfc_title
 		req_message = create_lookup_request(client_rfc_num, client_rfc_title)
-		information_list = [req_message, upload_client_port_number, client_hostname, client_rfc_num, client_rfc_title]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list, -1)
 		clientSocket.sendall(info_add)
 		response_received = clientSocket.recv(1024)
 		split_data=response_received.split('\r\n')
 		if '404 Not Found' in split_data[0]:
+			print response_received
+		elif 'Version Not Supported' in split_data[0]:
 			print response_received
 		else:
 			print response_received
@@ -165,7 +183,7 @@ def user_input():
 
 	elif service == "LIST":
 		req_message = create_list_request()
-		information_list = [req_message, upload_client_port_number, client_hostname]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list,-1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
@@ -178,7 +196,7 @@ def user_input():
 		print "Enter Title"
 		client_rfc_title = raw_input()
 		req_message = create_lookup_request(client_rfc_num, client_rfc_title)
-		information_list = [req_message, upload_client_port_number, client_hostname, client_rfc_num, client_rfc_title]
+		information_list = [req_message]
 		info_add = pickle.dumps(information_list, -1)
 		clientSocket.send(info_add)
 		response_received = clientSocket.recv(1024)
