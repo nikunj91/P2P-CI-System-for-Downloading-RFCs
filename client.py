@@ -11,6 +11,7 @@ from thread import *
 import platform
 import time
 import email.utils
+import sys
 
 # Server Information
 
@@ -25,14 +26,14 @@ client_RFC_list = {}
 # Connecting to Server using Socket and TCP
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientSocket.connect((serverName,serverPort))
-print 'Connected to server at address: '+serverName+" and port: "+serverPort
+print 'Connected to server at address: '+str(serverName)+" and port: "+str(serverPort)
 
 #Create the ADD Request message
 def create_add_request(client_rfc_num,client_rfc_title):
 	message = "ADD RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
 			  "Host: "+str(client_hostname)+"\r\n"\
 			  "Port: "+str(upload_client_port_number)+"\r\n"\
-			  "Title: "+str(client_rfc_title)+"\r\n"\
+			  "Title: "+str(client_rfc_title)+"\r\n"
 	return message
 
 #Create the LOOKUP Request message
@@ -40,21 +41,21 @@ def create_lookup_request(client_rfc_num, client_rfc_title):
 	message = "LOOKUP RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
 			  "Host: "+str(client_hostname)+"\r\n"\
 			  "Port: "+str(upload_client_port_number)+"\r\n"\
-			  "Title: "+str(client_rfc_title)+"\r\n"\
+			  "Title: "+str(client_rfc_title)+"\r\n"
 	return message
 
 #Create the GET Request message
 def create_get_request(client_rfc_num):
 	message = "GET RFC "+str(client_rfc_num)+" P2P-CI/1.0\r\n"\
 			  "Host: "+str(client_hostname)+"\r\n"\
-			  "OS: "+platform.platform()+"\r\n"\
+			  "OS: "+platform.platform()+"\r\n"
 	return message
 
 #Create the LIST Request message
 def create_list_request():
 	message = "LIST ALL P2P-CI/1.0\r\n"\
 			  "Host: "+str(client_hostname)+"\r\n"\
-			  "Port: "+str(upload_client_port_number)+"\r\n"\
+			  "Port: "+str(upload_client_port_number)+"\r\n"
 	return message
 
 #This will keep the client upload socket on the randomly generated port number.
