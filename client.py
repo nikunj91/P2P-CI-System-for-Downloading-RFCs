@@ -158,20 +158,24 @@ def user_input():
 		print "Enter Title"
 		client_rfc_title = raw_input()
 
-		#Create the ADD Request message and send it to server using the socket
-		req_message = create_add_request(client_rfc_num,client_rfc_title)
+		rfc_file_path = os.getcwd()+"/RFC/RFC"+client_rfc_num+".txt"
+		if os.path.isfile(rfc_file_path):
+			#Create the ADD Request message and send it to server using the socket
+			req_message = create_add_request(client_rfc_num,client_rfc_title)
 
-		print "ADD Request to be sent to the server"
-		print req_message
+			print "ADD Request to be sent to the server"
+			print req_message
 
-		information_list = [req_message]
-		info_add = pickle.dumps(information_list,-1)
-		clientSocket.send(info_add)
-		
-		#Receive the response from server and print the same
-		response_received = clientSocket.recv(1024)
-		print "ADD Response sent from the server"
-		print response_received
+			information_list = [req_message]
+			info_add = pickle.dumps(information_list,-1)
+			clientSocket.send(info_add)
+			
+			#Receive the response from server and print the same
+			response_received = clientSocket.recv(1024)
+			print "ADD Response sent from the server"
+			print response_received
+		else:
+			print "File Not Present in the directory"
 
 		user_input()
 
