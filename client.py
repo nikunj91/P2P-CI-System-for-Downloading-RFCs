@@ -66,7 +66,7 @@ def upload_thread():
 	
 	#Create a upload server socket
 	uploadSocket = socket.socket()
-	host=socket.gethostname()
+	host='0.0.0.0'
 	uploadSocket.bind((host,upload_client_port_number))
 	uploadSocket.listen(5)
 	while 1:
