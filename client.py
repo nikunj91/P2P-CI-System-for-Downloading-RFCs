@@ -289,9 +289,8 @@ def user_input():
 		print 'Wrong input. Please try again.'
 		user_input()
 
-#Generating the initial peer file data from the specified directory
-#Returns 2 lists, one each for RFC numbers and RFC titles
-def get_rfc_details():
+#Retrieving the initial peer file data from the specified directory and sending ADD requests to server for each of them
+def send_peer_info(clientSocket):
 	rfc_numbers=[]
 	rfc_titles=[]
 	rfc_storage_path = os.getcwd()+"/RFC"
@@ -299,23 +298,28 @@ def get_rfc_details():
 		if 'RFC' in file_name:
 			rfc_number=file_name[file_name.find("C")+1:file_name.find(".")]
 			rfc_title=file_name
-			rfc_numbers.append(rfc_number)
-			rfc_titles.append(rfc_title)
-	return rfc_numbers,rfc_titles
-
-#Generating the initial peer file data to send over to the server
-def send_peer_info():
-	rfc_numbers,rfc_titles=get_rfc_details()
-	return [upload_client_port_number,rfc_numbers,rfc_titles]
+			#for each file, create and send an ADD request
+			req_message = create_add_request(rfc_number,rfc_title)
+			print "ADD Request to be sent to the server"
+			print req_message
+			information_list = [req_message]
+			info_add = pickle.dumps(information_list,-1)
+			clientSocket.send(info_add)
+			#Receive the response from server and print the same
+			response_received = clientSocket.recv(1024)
+			print "ADD Response sent from the server"
+			print response_received
 
 #Generating the random client port number it will use for uploading
 upload_client_port_number = 60000 + random.randint(1,1000)
 
-#Generating the initial peer file data to send over to the server and sending the same to server
-send_data=send_peer_info()
-data = pickle.dumps(send_data)
+#Send the upload port information to the server
+data = pickle.dumps([upload_client_port_number])
 clientSocket.send(data)
 clientSocket.close
+
+#Generating the initial peer file data to send over to the server and sending the same to server
+send_peer_info(clientSocket)
 
 #Starts a new thread that maintain the upload server socket over the random upload port generated
 start_new_thread(upload_thread,())

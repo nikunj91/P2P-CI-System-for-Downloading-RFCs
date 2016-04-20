@@ -33,18 +33,10 @@ peer_rfc_dict={}
 #value:rfc_title
 rfc_number_title_dict={}
 
-# Insert the intial data into the data structures
+# Insert the intial client upload port data into the data structure
 def insert_data_in_dict(initial_data,hostname):
-	global peer_info_dict,peer_rfc_dict
+	global peer_info_dict
 	peer_info_dict[hostname]=initial_data[0]
-	rfc_list=[]
-	for i in range(0,len(initial_data[1])):
-		if peer_rfc_dict.has_key(initial_data[1][i]):
-			peer_rfc_value=peer_rfc_dict.get(initial_data[1][i])
-			peer_rfc_value.append(hostname)
-		else:
-			peer_rfc_dict[initial_data[1][i]]=[hostname]
-		rfc_number_title_dict[initial_data[1][i]]=initial_data[2][i]
 
 #Add the RFC to the data structures
 def add_peer_rfc(rfc_number,rfc_title,client_host_name):
@@ -90,7 +82,7 @@ def list_peer(client_host_name):
 #Main server thread function that handles all the requests for ADD< LOOKUP, LIST and EXIT and responds to them
 def client_init(connectionsocket, addr):
 	
-	#Get the initial data sent by client containing its stored RFC infomation 
+	#Get the initial data sent by client containing its upload port number 
 	initial_data = pickle.loads(connectionsocket.recv(1024))
 	host_name=addr[0]+":"+str(initial_data[0])
 
